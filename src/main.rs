@@ -3,8 +3,9 @@ use std::fs;
 use std::env;
 use std::io;
 
-fn find_file(to_find: &str, search_path: &str) -> io::Result<()> {
+fn find_file(to_find: &str, search_path: &str) -> io::Result<bool> {
     let mut queue: VecDeque<String> = VecDeque::new();
+    let mut is_found = false;
 
     for entry in fs::read_dir(search_path)? {
         let entry = entry?;
@@ -13,6 +14,7 @@ fn find_file(to_find: &str, search_path: &str) -> io::Result<()> {
         if metadata.is_file() { //File
             if entry.file_name().to_string_lossy() == to_find {
                 println!("Found file: {}", entry.path().display());
+                is_found = true;
             }
         } else if metadata.is_dir() {   //Directory
             queue.push_back(entry.path().display().to_string());
@@ -20,10 +22,12 @@ fn find_file(to_find: &str, search_path: &str) -> io::Result<()> {
     }
 
     while let Some(next_dir) = queue.pop_front() {
-        find_file(to_find, &next_dir)?;
+        if find_file(to_find, &next_dir)? {
+            is_found = true;
+        }
     }
 
-    Ok(())
+    Ok(is_found)
 }
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -37,6 +41,7 @@ fn main() -> io::Result<()> {
         println!("Usage: krab <filename> <path>");
         return Ok(());
     }
+
     let search_path = if args.len() > 2 {
         &args[2]
     } else {
@@ -44,6 +49,10 @@ fn main() -> io::Result<()> {
     };
 
     println!("Searching for {} in {}", to_find, search_path);
-    find_file(to_find, search_path)?;
+    match find_file(to_find, search_path) {
+        Ok(true) => (),
+        Ok(false) => println!("File not found!"),
+        Err(e) => eprintln!("Error: {}", e),
+    }
     Ok(())
 }
