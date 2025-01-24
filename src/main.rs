@@ -12,7 +12,7 @@ fn find_file(to_find: &str, search_path: &str) -> io::Result<bool> {
         let metadata = entry.metadata()?;
 
         if metadata.is_file() { //File
-            if entry.file_name().to_string_lossy() == to_find {
+            if entry.file_name().to_string_lossy().to_lowercase() == to_find.to_lowercase() {
                 println!("Found file: {}", entry.path().display());
                 is_found = true;
             }
@@ -29,6 +29,7 @@ fn find_file(to_find: &str, search_path: &str) -> io::Result<bool> {
 
     Ok(is_found)
 }
+
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
     if args.len() == 1 {
