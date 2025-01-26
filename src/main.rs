@@ -17,11 +17,11 @@ fn recursive_search(
         let entry = entry?;
         let metadata = entry.metadata()?;
 
-        if metadata.is_file() {
-            if entry.file_name().to_string_lossy().to_lowercase() == to_find.to_lowercase() {
-                tx.send(entry.path().display().to_string()).unwrap();
-            }
-        } else if metadata.is_dir() {
+        if entry.file_name().to_string_lossy().to_lowercase() == to_find.to_lowercase() {
+            tx.send(entry.path().display().to_string()).unwrap();
+        }
+
+        if metadata.is_dir() {
             queue.lock().unwrap().push_back(entry.path().display().to_string());
         } 
     }
