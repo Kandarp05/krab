@@ -4,6 +4,7 @@ use std::sync::mpsc::Sender;
 use std::io;
 use std::collections::VecDeque;
 use std::fs;
+use regex::Regex;
 
 pub struct SearchWorker {
     pool: ThreadPool,
@@ -30,11 +31,18 @@ impl SearchWorker {
         search_path: String,
         tx: Sender<String>
     ) -> io::Result::<()> {
+        let pattern = {
+            let this = Regex::new(&format!(r"(?i)^{to_find}(\.[^.]+)?$"));
+            match this {
+                Ok(t) => Ok(t),
+                Err(e) => Err((|e| io::Error::new(io::ErrorKind::Other, e))(e)),
+            }
+        }?;
         for entry in fs::read_dir(search_path)? {
             let entry = entry?;
             let metadata = entry.metadata()?;
     
-            if entry.file_name().to_string_lossy().to_lowercase() == to_find.to_lowercase() {
+            if pattern.is_match(&entry.file_name().to_string_lossy().to_lowercase()) {
                 tx.send(entry.path().display().to_string()).unwrap();
             }
     

@@ -3,7 +3,6 @@ use std::env;
 use krab::Finder;
 
 
-
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
     if args.len() == 1 {
@@ -23,7 +22,7 @@ fn main() -> io::Result<()> {
         ".".to_string()
     };
 
-    let finder = Finder::new(10);
+    let finder = Finder::new(50);
 
     match finder.search(to_find, search_path) {
         Ok(results) => {
