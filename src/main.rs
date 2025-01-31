@@ -23,18 +23,10 @@ fn main() -> io::Result<()> {
     };
 
     let finder = Finder::new(50);
+    let receiver = finder.search(to_find, search_path)?;
 
-    match finder.search(to_find, search_path) {
-        Ok(results) => {
-            if results.is_empty() {
-                println!("No matches found");
-            } else {
-                for path in results {
-                    println!("> {}", path);
-                }
-            }
-        }
-        Err(e) => eprintln!("Error: {e}"),
+    for path in receiver {
+        println!("{}", path);
     }
 
     Ok(())
