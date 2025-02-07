@@ -1,7 +1,9 @@
-use std::io;
-use std::env;
-use krab::Finder;
+mod cli;
 
+use std::env;
+use cli::output::print_options;
+use krab::Finder;
+use std::io;
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -22,12 +24,19 @@ fn main() -> io::Result<()> {
         ".".to_string()
     };
 
-    let finder = Finder::new(50);
-    let receiver = finder.search(to_find, search_path)?;
-
-    for path in receiver {
-        println!("{}", path);
+    let finder = Finder::new(100);
+    
+    match finder.search(to_find, search_path) {
+        Ok(results) => {
+            if results.is_empty() {
+                println!("No marches found!")
+            } else {
+                print_options(results)?;
+            }
+        }
+        Err(e) => eprintln!("{e}"),
     }
 
     Ok(())
+
 }

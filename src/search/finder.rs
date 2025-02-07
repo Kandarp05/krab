@@ -1,6 +1,6 @@
 use threadpool::ThreadPool;
 use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{channel, Receiver};
+use std::sync::mpsc::channel;
 use std::io;
 use std::collections::VecDeque;
 
@@ -23,12 +23,13 @@ impl Finder {
         &self,
         to_find: String, 
         search_path: String, 
-    ) -> io::Result<Receiver<String>> {
+    ) -> io::Result<Vec<String>> {
         let (tx, rx) = channel();
     
         let worker = SearchWorker::new(self.pool.clone(), Arc::clone(&self.queue));
-        worker.execute(to_find, search_path, tx)?;
+        worker.execute(to_find, search_path, tx.clone())?;
+        drop(tx);
 
-        Ok(rx)
+        Ok(rx.iter().collect())
     }
 }
