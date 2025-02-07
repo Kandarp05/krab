@@ -3,6 +3,7 @@ use crossterm::{
     event::{self, Event, KeyCode},
     terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
     execute,
+    style::{Color, SetBackgroundColor, SetForegroundColor, ResetColor, SetAttribute, Attribute},
 };
 use std::io::{self, stdout, Write};
 
@@ -56,7 +57,18 @@ fn print_selections(
     for (i, option) in results.iter().enumerate() {
         execute!(stdout, MoveTo(0, i as u16))?;
         if i == selected {
+            execute!(
+                stdout,
+                SetBackgroundColor(Color::Blue),
+                SetForegroundColor(Color::White),
+                SetAttribute(Attribute::Bold),
+            )?;
             write!(stdout, "> {}", option)?;
+            execute!(
+                stdout,
+                ResetColor,
+                SetAttribute(Attribute::Reset),
+            )?;
         } else {
             write!(stdout, "  {}", option)?;
         }
