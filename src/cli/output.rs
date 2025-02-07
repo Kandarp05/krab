@@ -1,17 +1,19 @@
 use crossterm::{
-    cursor::{MoveTo, position},
+    cursor::{MoveTo, Hide, Show},
     event::{self, Event, KeyCode},
     terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
-    QueueableCommand,
+    execute,
 };
 use std::io::{self, stdout, Write};
 
 pub fn print_options(results: Vec<String>) -> io::Result<()> {
-    let (start_x, start_y) = position()?;
+    let mut stdout = stdout();
     enable_raw_mode()?;
+    execute!(stdout, Clear(ClearType::All), Hide)?;
+    
     let mut selected = 0;
 
-    print_selections(&results, selected, start_x, start_y)?;
+    print_selections(&results, selected)?;
 
     loop {
         if let Event::Key(key_event) = event::read()? {
@@ -21,51 +23,44 @@ pub fn print_options(results: Vec<String>) -> io::Result<()> {
                         selected -= 1;
                     }
                 }
-
                 KeyCode::Down => {
                     if selected < results.len() - 1 {
                         selected += 1;
                     }
                 }
-
                 KeyCode::Enter => {
+                    execute!(stdout, Clear(ClearType::All), MoveTo(0, 0), Show)?;
                     disable_raw_mode()?;
-                    println!("You selected: {}", results[selected]);
+                    println!("Selected: {}", results[selected]);
                     return Ok(());
                 }
-
                 KeyCode::Esc => {
+                    execute!(stdout, Clear(ClearType::All), MoveTo(0, 0), Show)?;
                     disable_raw_mode()?;
                     return Ok(());
                 }
-
                 _ => {}
             }
+            print_selections(&results, selected)?;
         }
-
-        print_selections(&results, selected,  start_x,  start_y)?;
     }
 }
 
 fn print_selections(
     results: &Vec<String>,
     selected: usize,
-    start_x: u16, 
-    start_y: u16,
 ) -> io::Result<()> {
     let mut stdout = stdout();
-
-    stdout.queue(MoveTo(start_x, start_y))?;
-    stdout.queue(Clear(ClearType::FromCursorDown))?;
+    execute!(stdout, Clear(ClearType::All), MoveTo(0, 0))?;
 
     for (i, option) in results.iter().enumerate() {
+        execute!(stdout, MoveTo(0, i as u16))?;
         if i == selected {
-            print!("> {}\r", option);
+            write!(stdout, "> {}", option)?;
         } else {
-            print!("  {}\r", option);
+            write!(stdout, "  {}", option)?;
         }
     }
     stdout.flush()?;
     Ok(())
-
 }
